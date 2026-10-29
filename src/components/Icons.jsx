@@ -1,0 +1,23 @@
+const base = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+const I = (paths) => (props) => <svg {...base} {...props}>{paths}</svg>;
+
+export const IconBag = I(<><path d="M5 8h14l-1.2 12.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></>);
+export const IconClose = I(<><path d="M6 6l12 12M18 6L6 18" /></>);
+export const IconArrow = I(<><path d="M4 12h15M13 6l6 6-6 6" /></>);
+export const IconArrowUpRight = I(<><path d="M7 17L17 7M8 7h9v9" /></>);
+export const IconPlus = I(<path d="M12 5v14M5 12h14" />);
+export const IconMinus = I(<path d="M5 12h14" />);
+export const IconSearch = I(<><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></>);
+export const IconRotate = I(<><path d="M20 12a8 8 0 1 1-2.3-5.6" /><path d="M20 4v4h-4" /></>);
+export const IconZoomIn = I(<><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2M11 8v6M8 11h6" /></>);
+export const IconZoomOut = I(<><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2M8 11h6" /></>);
+export const IconExpand = I(<><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></>);
+export const IconFilter = I(<><path d="M4 6h16M7 12h10M10 18h4" /></>);
+export const IconTrash = I(<><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></>);
+export const IconCheck = I(<path d="M5 12.5l4.5 4.5L19 7.5" />);
+export const IconEye = I(<><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>);
+export const IconFlip = I(<><path d="M12 3v18" strokeDasharray="2 3" /><path d="M8 7l-4 5 4 5M16 7l4 5-4 5" /></>);
+export const IconUp = I(<path d="M6 15l6-6 6 6" />);
+export const IconDown = I(<path d="M6 9l6 6 6-6" />);
+export const IconImage = I(<><rect x="3" y="4" width="18" height="16" rx="1" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></>);
+export const IconLogout = I(<><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4M6 12h10" /></>);
