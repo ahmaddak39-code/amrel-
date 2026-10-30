@@ -16,7 +16,7 @@ export function verifyPassword(password, stored) {
   const [, N, r, p, saltB64, hashB64] = parts;
   const expected = Buffer.from(hashB64, 'base64');
   const actual = scryptSync(password, Buffer.from(saltB64, 'base64'), expected.length, {
-    N: Number(N), r: Number(r), p: Number(p), maxmem: 64 * 1024 * 1024,
+    N: Number(N), r: Number(r), p: Number(p), maxmem: 512 * 1024 * 1024,
   });
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }

@@ -34,7 +34,7 @@ export default function Admin() {
   }, [toast]);
 
   useEffect(() => { api('/api/admin/session').then(setSession).catch(() => setSession({ authenticated: false, configured: true })); }, []);
-  useEffect(() => { if (session?.authenticated) load(); }, [session, load]);
+  useEffect(() => { if (session?.authenticated && !session.mustChange) load(); }, [session, load]);
   useEffect(() => { document.documentElement.classList.add('is-admin'); return () => document.documentElement.classList.remove('is-admin'); }, []);
 
   // после любых изменений — обновляем и админку, и витрину
@@ -50,7 +50,14 @@ export default function Admin() {
   }, [session, path, navigate]);
 
   if (!session) return <div className="page-loading" />;
-  if (!session.authenticated) return <Login configured={session.configured} onLogin={() => setSession({ authenticated: true, configured: true })} />;
+  if (!session.authenticated) return <Login configured={session.configured} onLogin={() => api('/api/admin/session').then(setSession)} />;
+  if (session.mustChange) {
+    return (
+      <div className="adm adm--forced">
+        <div className="adm__main"><Security forced guard={guard} onDone={() => setSession({ ...session, mustChange: false })} /></div>
+      </div>
+    );
+  }
 
   const logout = async () => {
     await api('/api/admin/logout', { method: 'POST' }).catch(() => {});

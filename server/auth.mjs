@@ -4,6 +4,7 @@
 // Сессия — случайный токен в httpOnly-cookie; в базе лежит только его SHA-256.
 import { randomBytes, createHash } from 'node:crypto';
 import { verifyPassword, hashPassword } from './auth-hash.mjs';
+import { INITIAL_ADMIN_HASH } from './initial-admin.mjs';
 
 export { verifyPassword, hashPassword };
 export const COOKIE = 'amrel_admin';
@@ -13,7 +14,12 @@ const sha = (t) => createHash('sha256').update(t).digest('hex');
 
 export async function currentHash(store) {
   const s = await store.settings.all();
-  return s[PW_KEY] || process.env.ADMIN_PASSWORD_HASH || '';
+  return s[PW_KEY] || process.env.ADMIN_PASSWORD_HASH || INITIAL_ADMIN_HASH || '';
+}
+/** true — действует одноразовый начальный пароль, и его нужно сменить, прежде чем работать в панели */
+export async function mustChangePassword(store) {
+  const s = await store.settings.all();
+  return !s[PW_KEY] && !process.env.ADMIN_PASSWORD_HASH && !!INITIAL_ADMIN_HASH;
 }
 export async function passwordConfigured(store) { return !!(await currentHash(store)); }
 

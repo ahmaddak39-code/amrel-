@@ -12,13 +12,13 @@ function strength(p) {
 }
 const LABELS = ['Слишком простой', 'Слабый', 'Средний', 'Хороший', 'Надёжный'];
 
-export default function Security({ guard, storage }) {
+export default function Security({ guard, storage, forced, onDone }) {
   const toast = useToast();
   const [f, setF] = useState({ current: '', next: '', again: '' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [health, setHealth] = useState(null);
-  useEffect(() => { api('/api/admin/health').then(setHealth).catch((e) => { if (!guard(e)) setHealth({ error: e.message }); }); }, [guard]);
+  useEffect(() => { if (!forced) api('/api/admin/health').then(setHealth).catch((e) => { if (!guard(e)) setHealth({ error: e.message }); }); }, [guard, forced]);
 
   const set = (k) => (e) => { setF((x) => ({ ...x, [k]: e.target.value })); setErr(''); };
   const st = strength(f.next);
@@ -30,16 +30,19 @@ export default function Security({ guard, storage }) {
       await api('/api/admin/password', { method: 'POST', body: { current: f.current, next: f.next } });
       setF({ current: '', next: '', again: '' });
       toast.success('Пароль изменён. Вход на других устройствах завершён');
+      onDone?.();
     } catch (ex) { if (!guard(ex)) setErr(ex.message); }
     finally { setBusy(false); }
   };
 
   return (
     <div className="adm-page">
-      <PageHead title="Пароль и доступ" sub="Смена пароля администратора и состояние хранилища" />
-      <div className="adm-alert">
-        <b>Рекомендация:</b> начальный пароль упоминался в переписке. Смените его здесь перед тем, как давать ссылку на сайт покупателям.
-      </div>
+      <PageHead title={forced ? 'Придумайте новый пароль' : 'Пароль и доступ'} sub={forced ? 'Это первый вход. Начальный пароль одноразовый — замените его своим, и панель откроется' : 'Смена пароля администратора и состояние хранилища'} />
+      {!forced && (
+        <div className="adm-alert">
+          <b>Совет:</b> используйте длинный пароль, который нигде больше не применяете.
+        </div>
+      )}
       <div className="adm-grid">
         <form className="adm-card" onSubmit={submit}>
           <h3>Сменить пароль</h3>
@@ -56,9 +59,9 @@ export default function Security({ guard, storage }) {
           <button className="btn btn--accent btn--sm" disabled={busy || !f.current || !f.next}><span>{busy ? 'Сохраняем…' : 'Сменить пароль'}</span></button>
           <p className="adm-hint">Новый пароль хранится на сервере только в зашифрованном виде (хеш). После смены все остальные устройства выйдут из панели.</p>
         </form>
-        <section className="adm-card">
+        {!forced && <section className="adm-card">
           <h3>Хранилище</h3>
-          <p className="muted">{storage === 'supabase' ? 'Облако Supabase: товары и заказы в базе данных, фото в облачном хранилище.' : 'Локальная папка data/ на этом компьютере.'}</p>
+          <p className="muted">{storage === 'supabase' ? 'Облако Supabase: товары, заказы и фото хранятся в облаке и не пропадают.' : 'Локальная папка data/ на этом компьютере.'}</p>
           {health && !health.error && (
             <ul className="health">
               <li className={health.database ? 'ok' : 'bad'}>База данных: {health.database ? 'работает' : 'нет связи'}</li>
@@ -68,7 +71,7 @@ export default function Security({ guard, storage }) {
             </ul>
           )}
           {health?.error && <p className="field__error">{health.error}</p>}
-        </section>
+        </section>}
       </div>
     </div>
   );

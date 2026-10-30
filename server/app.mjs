@@ -155,7 +155,8 @@ async function handleApi(store, req, res, p) {
 
   // --- вход / выход ---
   if (p === '/api/admin/session' && m === 'GET') {
-    return json(res, 200, { authenticated: await auth.isAdmin(store, req), configured: await auth.passwordConfigured(store) });
+    const authenticated = await auth.isAdmin(store, req);
+    return json(res, 200, { authenticated, configured: await auth.passwordConfigured(store), mustChange: authenticated ? await auth.mustChangePassword(store) : undefined });
   }
   if (p === '/api/admin/login' && m === 'POST') {
     if (!sameOrigin(req)) return json(res, 403, { error: 'Запрос отклонён' });
@@ -183,6 +184,10 @@ async function handleApi(store, req, res, p) {
   if (p.startsWith('/api/admin/')) {
     if (!(await auth.isAdmin(store, req))) return json(res, 401, { error: 'Требуется вход в панель администратора' });
     if (m !== 'GET' && !sameOrigin(req)) return json(res, 403, { error: 'Запрос отклонён' });
+    // пока действует начальный пароль, доступна только его смена
+    if (p !== '/api/admin/password' && await auth.mustChangePassword(store)) {
+      return json(res, 403, { error: 'Сначала смените начальный пароль', mustChange: true });
+    }
     return handleAdmin(store, req, res, p, m);
   }
   return json(res, 404, { error: 'Не найдено' });
