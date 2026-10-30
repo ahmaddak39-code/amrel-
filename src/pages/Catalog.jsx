@@ -95,7 +95,10 @@ export default function Catalog() {
   useFlip(grid, [list.map((p) => p.id).join()]);
   const activeCount = colors.length + sizes.length + (pmin != null || pmax != null ? 1 : 0);
   const reset = () => setParams((p) => { ['color', 'size', 'min', 'max', 'q'].forEach((k) => p.delete(k)); });
-  useEffect(() => { document.documentElement.classList.toggle('sheet-lock', sheet); }, [sheet]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('sheet-lock', sheet);
+    return () => document.documentElement.classList.remove('sheet-lock');
+  }, [sheet]);
 
   if (!catalog) return <div className="page-loading" />;
 

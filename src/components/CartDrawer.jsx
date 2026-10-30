@@ -48,7 +48,11 @@ export default function CartDrawer() {
   const { navigate, path } = useRouter();
   const panel = useRef(null);
 
-  useEffect(() => { document.documentElement.classList.toggle('drawer-lock', open); if (open) setTimeout(() => panel.current?.focus(), 50); }, [open]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('drawer-lock', open);
+    if (open) setTimeout(() => panel.current?.focus(), 50);
+    return () => document.documentElement.classList.remove('drawer-lock');
+  }, [open]);
   useEffect(() => { setOpen(false); }, [path, setOpen]);
   useEffect(() => {
     const on = (e) => { if (e.key === 'Escape') setOpen(false); };

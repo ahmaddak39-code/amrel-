@@ -35,7 +35,12 @@ export default function Admin() {
 
   useEffect(() => { api('/api/admin/session').then(setSession).catch(() => setSession({ authenticated: false, configured: true })); }, []);
   useEffect(() => { if (session?.authenticated && !session.mustChange) load(); }, [session, load]);
-  useEffect(() => { document.documentElement.classList.add('is-admin'); return () => document.documentElement.classList.remove('is-admin'); }, []);
+  useEffect(() => {
+    // на всякий случай снимаем любые блокировки прокрутки, оставшиеся от витрины
+    document.documentElement.classList.remove('menu-lock', 'drawer-lock', 'modal-lock', 'sheet-lock', 'viewer-lock', 'intro-lock');
+    document.documentElement.classList.add('is-admin');
+    return () => document.documentElement.classList.remove('is-admin');
+  }, []);
 
   // после любых изменений — обновляем и админку, и витрину
   const changed = useCallback(async () => { await load(); refresh().catch(() => {}); }, [load, refresh]);

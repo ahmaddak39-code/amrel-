@@ -39,7 +39,10 @@ export default function Viewer({ images = [], spin = [], alt = '', variantKey })
     let n = 0;
     spin.forEach((src) => { const im = new Image(); im.onload = () => setLoaded(++n); im.src = src; });
   }, [spin, has360]);
-  useEffect(() => { document.documentElement.classList.toggle('viewer-lock', full); }, [full]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('viewer-lock', full);
+    return () => document.documentElement.classList.remove('viewer-lock');
+  }, [full]);
   useEffect(() => {
     if (!full) return;
     const on = (e) => { if (e.key === 'Escape') setFull(false); };

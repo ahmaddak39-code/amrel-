@@ -45,7 +45,10 @@ export default function Header() {
 
   useEffect(() => { if (!bump) return; setBumping(true); const t = setTimeout(() => setBumping(false), 700); return () => clearTimeout(t); }, [bump]);
   useEffect(() => { setMenu(false); }, [path]);
-  useEffect(() => { document.documentElement.classList.toggle('menu-lock', menu); }, [menu]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('menu-lock', menu);
+    return () => document.documentElement.classList.remove('menu-lock'); // меню закрывается при уходе со страницы
+  }, [menu]);
 
   const solid = y > 40 || path !== '/';
   const hidden = y > 280 && dir === 'down' && !menu;
