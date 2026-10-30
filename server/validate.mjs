@@ -85,7 +85,7 @@ export function product(body, { categoryExists }) {
 
 // --- тексты и блоки сайта ---
 const deepStr = (v, max) => str(v, { max });
-export const SETTINGS_KEYS = ['hero', 'slogan', 'about', 'quote', 'marquee', 'lookbook', 'contacts', 'delivery', 'sizeChart'];
+export const SETTINGS_KEYS = ['hero', 'slogan', 'about', 'quote', 'marquee', 'lookbook', 'contacts', 'delivery', 'sizeChart', 'share'];
 
 export function setting(key, v) {
   switch (key) {
@@ -93,6 +93,9 @@ export function setting(key, v) {
       eyebrow: deepStr(v.eyebrow, 80), title: str(v.title, { min: 1, max: 80, field: 'Заголовок' }),
       subtitle: deepStr(v.subtitle, 200), image: imageUrl(v.image), imageSecondary: v.imageSecondary ? imageUrl(v.imageSecondary) : '',
       imageThird: v.imageThird ? imageUrl(v.imageThird) : '',
+    };
+    case 'share': return {
+      image: v.image ? imageUrl(v.image) : '', title: deepStr(v.title, 90), description: deepStr(v.description, 200),
     };
     case 'slogan': return str(v, { min: 1, max: 60, field: 'Слоган' });
     case 'quote': return str(v, { min: 1, max: 120, field: 'Цитата' });

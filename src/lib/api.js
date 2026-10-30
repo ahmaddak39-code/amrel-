@@ -37,21 +37,31 @@ async function decode(file) {
     return img;
   } finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
 }
-export async function uploadImage(file, { maxSide = 2000 } = {}) {
+export async function uploadImage(file, { maxSide = 2000, cover = null } = {}) {
   let blob = null;
   try {
     const src = await decode(file);
     const w = src.width || src.naturalWidth; const h = src.height || src.naturalHeight;
-    const scale = Math.min(1, maxSide / Math.max(w, h));
     const canvas = document.createElement('canvas');
-    canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
-    canvas.getContext('2d').drawImage(src, 0, 0, canvas.width, canvas.height);
-    blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.86));
+    if (cover) {
+      // обложка для ссылки: обрезаем по центру до нужных пропорций
+      const [cw, ch] = cover;
+      const s = Math.max(cw / w, ch / h);
+      canvas.width = cw; canvas.height = ch;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, cw, ch);
+      ctx.drawImage(src, (cw - w * s) / 2, (ch - h * s) / 2, w * s, h * s);
+    } else {
+      const scale = Math.min(1, maxSide / Math.max(w, h));
+      canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
+      canvas.getContext('2d').drawImage(src, 0, 0, canvas.width, canvas.height);
+    }
+    blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', cover ? 0.82 : 0.86));
   } catch { /* не удалось обработать в браузере */ }
   if (!blob) {
     if (file.size > 4 * 1024 * 1024) throw new Error('Не удалось сжать фото. Попробуйте другое фото или сделайте скриншот');
     blob = file;
   }
-  const { url } = await api('/api/admin/upload', { method: 'POST', raw: blob });
+  const { url } = await api(cover ? '/api/admin/upload?share=1' : '/api/admin/upload', { method: 'POST', raw: blob });
   return url;
 }

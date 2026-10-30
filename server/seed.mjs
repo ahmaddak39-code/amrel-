@@ -86,6 +86,7 @@ export const SEED_PRODUCTS = [
 ];
 
 export const DEFAULT_SETTINGS = {
+  share: { image: '/img/share.jpg', title: '', description: '' },
   hero: {
     eyebrow: 'Коллекция футболок AMREL',
     title: 'СТИЛЬ БЕЗ ГРАНИЦ',

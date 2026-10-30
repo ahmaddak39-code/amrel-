@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { api } from '../lib/api.js';
+import { useEffect, useRef, useState } from 'react';
+import { api, uploadImage } from '../lib/api.js';
 import { useToast } from '../lib/toast.jsx';
 import { PageHead, SingleImage } from './ui.jsx';
 import { IconPlus, IconTrash } from '../components/Icons.jsx';
@@ -7,6 +7,43 @@ import { IconPlus, IconTrash } from '../components/Icons.jsx';
 const F = ({ label, children, wide = true, hint }) => (
   <label className={`field ${wide ? 'field--wide' : ''}`}><span className="field__label">{label}</span>{children}{hint && <small className="adm-hint">{hint}</small>}</label>
 );
+
+function ShareCover({ share, onChange, guard }) {
+  const toast = useToast();
+  const input = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const pick = async (file) => {
+    if (!file) return;
+    setBusy(true);
+    try { onChange({ ...share, image: await uploadImage(file, { cover: [1200, 630] }) }); toast.success('Обложка загружена — нажмите «Сохранить»'); }
+    catch (e) { if (!guard(e)) toast.error(e.message); }
+    finally { setBusy(false); }
+  };
+  const img = share.image || '/img/share.jpg';
+  return (
+    <div className="share">
+      <div className="share__chat">
+        <div className="share__bubble">
+          <div className="share__img"><img src={img} alt="Обложка ссылки" />{busy && <span className="share__busy">Загрузка…</span>}</div>
+          <div className="share__meta">
+            <b>{share.title || 'AMREL — стиль без границ'}</b>
+            <span>{share.description || 'AMREL — streetwear-бренд. Оверсайз-футболки с авторскими принтами.'}</span>
+            <small>amrel.vercel.app</small>
+          </div>
+          <div className="share__link">https://amrel.vercel.app</div>
+        </div>
+        <p className="adm-hint">Так ссылка на сайт будет выглядеть в WhatsApp, Telegram и других мессенджерах</p>
+      </div>
+      <div className="share__actions">
+        <button type="button" className="btn btn--light btn--sm" disabled={busy} onClick={() => input.current.click()}><span>{busy ? 'Загрузка…' : 'Выбрать фото обложки'}</span></button>
+        {share.image && share.image !== '/img/share.jpg' && (
+          <button type="button" className="link-btn" onClick={() => onChange({ ...share, image: '' })}>Вернуть обложку AMREL</button>
+        )}
+        <input ref={input} type="file" accept="image/*" hidden onChange={(e) => { pick(e.target.files[0]); e.target.value = ''; }} />
+      </div>
+    </div>
+  );
+}
 
 export default function Content({ guard, onChanged }) {
   const toast = useToast();
@@ -34,6 +71,16 @@ export default function Content({ guard, onChanged }) {
   return (
     <div className="adm-page">
       <PageHead title="Тексты и блоки" sub="Всё, что видят покупатели на главной странице и в контактах" />
+
+      <section className="adm-card">
+        <div className="adm-card__head"><h3>Обложка ссылки</h3><SaveBtn keys={['share']} label="Обложка ссылки" /></div>
+        <p className="muted">Картинка и подпись, которые появляются, когда вы отправляете ссылку на сайт. Лучше горизонтальное фото — оно обрежется до формата превью.</p>
+        <ShareCover share={s.share} onChange={(v) => upd('share', v)} guard={guard} />
+        <div className="fields">
+          <F label="Заголовок превью" wide={false} hint="Пусто — «AMREL — стиль без границ»"><input value={s.share.title} onChange={(e) => sub('share', 'title', e.target.value)} maxLength={90} /></F>
+          <F label="Описание превью" wide={false} hint="Короткая фраза под заголовком"><input value={s.share.description} onChange={(e) => sub('share', 'description', e.target.value)} maxLength={200} /></F>
+        </div>
+      </section>
 
       <section className="adm-card">
         <div className="adm-card__head"><h3>Главный баннер</h3><SaveBtn keys={['hero']} label="Главный баннер" /></div>

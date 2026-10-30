@@ -92,10 +92,18 @@ function sniffImage(buf) {
   return null;
 }
 const TYPES = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', avif: 'image/avif' };
-async function saveUpload(store, buf) {
+async function saveUpload(store, buf, { share = false } = {}) {
   const kind = sniffImage(buf);
   if (!kind) throw new V.BadRequest('Поддерживаются фото JPG, PNG, WebP, AVIF или HEIC');
-  if (sharp) {
+  // обложка для ссылки: мессенджеры надёжно показывают JPG 1200×630 до ~300 КБ
+  if (share && sharp) {
+    try {
+      const out = await sharp(buf, { failOn: 'error' }).rotate().resize(1200, 630, { fit: 'cover', position: 'attention' }).jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+      return store.media.save(out, 'jpg', 'image/jpeg');
+    } catch { throw new V.BadRequest('Файл повреждён или не является изображением'); }
+  }
+  if (share && kind !== 'jpg' && kind !== 'png') throw new V.BadRequest('Для обложки загрузите фото JPG или PNG');
+  if (sharp && !share) {
     let out;
     try {
       out = await sharp(buf, { failOn: 'error' }).rotate().resize({ width: 1800, height: 2400, fit: 'inside', withoutEnlargement: true }).webp({ quality: 84 }).toBuffer();
@@ -289,7 +297,7 @@ async function handleAdmin(store, req, res, p, m) {
   if (section === 'upload' && m === 'POST') {
     if (rateLimited(`upload:${clientIp(req)}`, 300, 60 * 60 * 1000)) return json(res, 429, { error: 'Слишком много загрузок подряд' });
     const buf = await readBody(req, 20 * 1024 * 1024);
-    return json(res, 201, { url: await saveUpload(store, buf) });
+    return json(res, 201, { url: await saveUpload(store, buf, { share: /[?&]share=1(&|$)/.test(req.url || '') }) });
   }
 
   if (section === 'orders') {

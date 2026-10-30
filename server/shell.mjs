@@ -7,11 +7,17 @@ const getManifest = () => manifest;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const safeJson = (o) => JSON.stringify(o).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, (c) => (c === '\u2028' ? '\\u2028' : '\\u2029'));
 
+// WhatsApp и часть мессенджеров не показывают WebP в превью — для своих фото есть JPG-копия
+const ogImage = (src) => (/^\/img\/.+\.webp$/.test(src) ? src.replace(/\.webp$/, '.jpg') : src);
+const abs = (base, src) => (/^https?:\/\//.test(src) ? src : base + src);
+
 export function renderShell({ path, req, catalog, settings }) {
   const base = process.env.PUBLIC_URL || `${req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http'}://${req.headers.host}`;
   let title = 'AMREL — стиль без границ';
   let description = 'AMREL — streetwear-бренд. Оверсайз-футболки с авторскими принтами. Каталог, выбор цвета и размера, заказ онлайн.';
-  let image = settings.hero?.image || '/img/scenes/dubai-rack.webp';
+  const share = settings.share || {};
+  let image = share.image || '/img/share.jpg';
+  let shareCover = true; // обложка 1200×630
   let status = 200;
   let ld = { '@context': 'https://schema.org', '@type': 'ClothingStore', name: 'AMREL', url: base,
     address: settings.contacts?.address, telephone: settings.contacts?.phone };
@@ -22,10 +28,11 @@ export function renderShell({ path, req, catalog, settings }) {
     if (prod) {
       title = `${prod.name} — AMREL`;
       description = prod.description.slice(0, 160);
-      image = prod.variants[0]?.images[0] || image;
+      const own = prod.variants[0]?.images[0];
+      if (own) { image = own; shareCover = false; }
       const price = prod.salePrice ?? prod.price;
       ld = { '@context': 'https://schema.org', '@type': 'Product', name: prod.name, description: prod.description,
-        brand: { '@type': 'Brand', name: 'AMREL' }, image: prod.variants.flatMap((v) => v.images.slice(0, 1)).map((i) => base + i) };
+        brand: { '@type': 'Brand', name: 'AMREL' }, image: prod.variants.flatMap((v) => v.images.slice(0, 1)).map((i) => abs(base, i)) };
       if (price != null) {
         const inStock = prod.variants.some((v) => v.sizes.some((s) => s.stock > 0));
         ld.offers = { '@type': 'Offer', priceCurrency: 'RUB', price, availability: `https://schema.org/${inStock ? 'InStock' : 'OutOfStock'}`, url: `${base}/product/${prod.slug}` };
@@ -37,7 +44,10 @@ export function renderShell({ path, req, catalog, settings }) {
     title = 'Панель администратора — AMREL';
   } else if (/^\/checkout/.test(path)) {
     title = 'Оформление заказа — AMREL';
-  } else if (path !== '/' && path !== '') {
+  } else if (path === '/' || path === '') {
+    if (share.title) title = share.title;
+    if (share.description) description = share.description;
+  } else {
     status = 404; title = 'Страница не найдена — AMREL';
   }
 
@@ -59,7 +69,9 @@ ${noindex ? '<meta name="robots" content="noindex, nofollow">' : `<link rel="can
 <meta property="og:site_name" content="AMREL">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
-<meta property="og:image" content="${esc(base + image)}">
+<meta property="og:url" content="${esc(base + path)}">
+<meta property="og:image" content="${esc(abs(base, ogImage(image)))}">
+${shareCover ? '<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n' : ''}<meta property="og:image:alt" content="AMREL">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/fonts/display-900.woff" as="font" type="font/woff" crossorigin>
